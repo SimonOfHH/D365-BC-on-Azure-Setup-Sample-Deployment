@@ -47,6 +47,13 @@ function Get-KeyVaultDeploymentParams {
     }
     $deployArgs
 }
+function Get-KeyVaultCertificateParams {
+    $deployArgs = @{
+        KeyVaultName = $nameSettings.KeyVaultName
+        Certificates = $certificates
+    }
+    $deployArgs
+}
 function Get-SqlDemoParams {
     $resourceTags = @{"Type" = "SQL" }
     $resourceTags += $resourceTagsAllResources
@@ -150,7 +157,10 @@ function Get-WebScaleSetParams {
     $deployArgs
 }
 function Get-LoadBalancerParams {
-    $resourceTags = @{"Type" = "App" }
+    $resourceTags = @{
+        "Type"    = "App" 
+        "UsedFor" = "InternalLoadBalancing"
+    }
     $resourceTags += $resourceTagsAllResources
     $deployArgs = @{
         LoadBalancerName   = $nameSettings.LoadBalancerNameInternal 
@@ -164,7 +174,10 @@ function Get-LoadBalancerParams {
     $deployArgs
 }
 function Get-PublicLoadBalancerParams {
-    $resourceTags = @{"Type" = "App" }
+    $resourceTags = @{
+        "Type"    = "App" 
+        "UsedFor" = "OutgoingInternetAccess"
+    }
     $resourceTags += $resourceTagsAllResources
     $deployArgs = @{
         LoadBalancerName    = $nameSettings.LoadBalancerNamePublic
@@ -211,6 +224,7 @@ function Get-ApplicationGatewayParams {
         PublicIpAddressName    = $nameSettings.ApplicationGatewayPublicIPName
         StorageAccountName     = $nameSettings.StorageAccountName
         TableNameEnvironments  = $storageTableNames.Environments
+        KeyVaultName           = $nameSettings.KeyVaultName
         EnvironmentTypeFilter  = "TEST"
         Tags                   = $resourceTags
     }
@@ -222,121 +236,144 @@ function Get-StorageAccountTables {
             TableName = $storageTableNames.Setup
             Values    = 
             @{
-                PartitionKey     = 0
-                RowKey           = "000"
-                Command          = "SetupNotDone"
-                ObjectName       = ""
-                Parameter1       = "ClearLog"
-                Parameter2       = ""
-                RestartNecessary = $true
+                PartitionKey      = 0
+                RowKey            = "000"
+                Command           = "SetupNotDone"
+                ObjectName        = ""
+                Parameter1        = "ClearLog"
+                Parameter2        = ""
+                RestartNecessary  = $true
+                GlobalExecuteOnce = $false
             },
             @{
-                PartitionKey     = 1
-                RowKey           = "001"
-                Command          = "CreateInstances"
-                ObjectName       = "AppScaleSet"
-                Parameter1       = "TEST"
-                Parameter2       = ""
-                RestartNecessary = $true
+                PartitionKey      = 1
+                RowKey            = "001"
+                Command           = "CreateInstances"
+                ObjectName        = "AppScaleSet"
+                Parameter1        = "TEST"
+                Parameter2        = ""
+                RestartNecessary  = $true
+                GlobalExecuteOnce = $false
             },
             @{
-                PartitionKey     = 1
-                RowKey           = "002"
-                Command          = "CreateWebInstances"
-                ObjectName       = "WebScaleSet"
-                Parameter1       = "TEST"
-                Parameter2       = ""
-                RestartNecessary = $true
+                PartitionKey      = 1
+                RowKey            = "002"
+                Command           = "CreateWebInstances"
+                ObjectName        = "WebScaleSet"
+                Parameter1        = "TEST"
+                Parameter2        = ""
+                RestartNecessary  = $true
+                GlobalExecuteOnce = $false
             },
             @{
-                PartitionKey     = 1
-                RowKey           = "003"
-                Command          = "UpdateInstanceConfiguration"
-                ObjectName       = "AppScaleSet"
-                Parameter1       = "TEST"
-                Parameter2       = ""
-                RestartNecessary = $true
+                PartitionKey      = 1
+                RowKey            = "003"
+                Command           = "UpdateInstanceConfiguration"
+                ObjectName        = "AppScaleSet"
+                Parameter1        = "TEST"
+                Parameter2        = ""
+                RestartNecessary  = $true
+                GlobalExecuteOnce = $false
             },
             @{
-                PartitionKey     = 1
-                RowKey           = "004"
-                Command          = "UpdateWebInstances"
-                ObjectName       = "WebScaleSet"
-                Parameter1       = "TEST"
-                Parameter2       = ""
-                RestartNecessary = $true
+                PartitionKey      = 1
+                RowKey            = "004"
+                Command           = "UpdateWebInstances"
+                ObjectName        = "WebScaleSet"
+                Parameter1        = "TEST"
+                Parameter2        = ""
+                RestartNecessary  = $true
+                GlobalExecuteOnce = $false
             },
             @{
-                PartitionKey     = 1
-                RowKey           = "005"
-                Command          = "CreateSPN"
-                ObjectName       = "AppScaleSet"
-                Parameter1       = "TEST"
-                Parameter2       = ""
-                RestartNecessary = $false
+                PartitionKey      = 1
+                RowKey            = "005"
+                Command           = "CreateSPN"
+                ObjectName        = "AppScaleSet"
+                Parameter1        = "TEST"
+                Parameter2        = ""
+                RestartNecessary  = $false
+                GlobalExecuteOnce = $false
             },
             @{
-                PartitionKey     = 1
-                RowKey           = "006"
-                Command          = "SetLoadbalancerDNSRecord"
-                ObjectName       = "AppScaleSet"
-                Parameter1       = "TEST"
-                Parameter2       = ""
-                RestartNecessary = $false
+                PartitionKey      = 1
+                RowKey            = "006"
+                Command           = "SetLoadbalancerDNSRecord"
+                ObjectName        = "AppScaleSet"
+                Parameter1        = "TEST"
+                Parameter2        = ""
+                RestartNecessary  = $false
+                GlobalExecuteOnce = $true
             },
             @{
-                PartitionKey     = 1
-                RowKey           = "007"
-                Command          = "SetupDelegation"
-                ObjectName       = "AppScaleSet"
-                Parameter1       = "TEST"
-                Parameter2       = ""
-                RestartNecessary = $false
+                PartitionKey      = 1
+                RowKey            = "007"
+                Command           = "SetupDelegation"
+                ObjectName        = "AppScaleSet"
+                Parameter1        = "TEST"
+                Parameter2        = ""
+                RestartNecessary  = $false
+                GlobalExecuteOnce = $true
             },
             @{
-                PartitionKey     = 1
-                RowKey           = "008"
-                Command          = "SetupNotDone"
-                ObjectName       = ""
-                Parameter1       = ""
-                Parameter2       = ""
-                RestartNecessary = $false
+                PartitionKey      = 1
+                RowKey            = "008"
+                Command           = "SetupNotDone"
+                ObjectName        = ""
+                Parameter1        = ""
+                Parameter2        = ""
+                RestartNecessary  = $false
+                GlobalExecuteOnce = $false
             },
             @{
-                PartitionKey     = 1
-                RowKey           = "009"
-                Command          = "UpdateLicense"
-                ObjectName       = "AppScaleSet"
-                Parameter1       = "TEST"
-                Parameter2       = "DEMO"
-                RestartNecessary = $false
+                PartitionKey      = 1
+                RowKey            = "009"
+                Command           = "UpdateLicense"
+                ObjectName        = "AppScaleSet"
+                Parameter1        = "TEST"
+                Parameter2        = "DEMO"
+                RestartNecessary  = $false
+                GlobalExecuteOnce = $true
             },
             @{
-                PartitionKey     = 1
-                RowKey           = "010"
-                Command          = "RestartServices"
-                ObjectName       = "AppScaleSet"
-                Parameter1       = "TEST"
-                Parameter2       = ""
-                RestartNecessary = $false
+                PartitionKey      = 1
+                RowKey            = "010"
+                Command           = "SetupCertificate"
+                ObjectName        = ""
+                Parameter1        = "TEST"
+                Parameter2        = ""
+                RestartNecessary  = $true
+                GlobalExecuteOnce = $false
             },
             @{
-                PartitionKey     = 1
-                RowKey           = "011"
-                Command          = "RestartIIS"
-                ObjectName       = "WebScaleSet"
-                Parameter1       = "TEST"
-                Parameter2       = ""
-                RestartNecessary = $false
+                PartitionKey      = 1
+                RowKey            = "011"
+                Command           = "RestartServices"
+                ObjectName        = "AppScaleSet"
+                Parameter1        = "TEST"
+                Parameter2        = ""
+                RestartNecessary  = $false
+                GlobalExecuteOnce = $false
             },
             @{
-                PartitionKey     = 1
-                RowKey           = "012"
-                Command          = "AddUsers"
-                ObjectName       = "AppScaleSet"
-                Parameter1       = "TEST"
-                Parameter2       = ""
-                RestartNecessary = $false
+                PartitionKey      = 1
+                RowKey            = "012"
+                Command           = "RestartIIS"
+                ObjectName        = "WebScaleSet"
+                Parameter1        = "TEST"
+                Parameter2        = ""
+                RestartNecessary  = $false
+                GlobalExecuteOnce = $false
+            },
+            @{
+                PartitionKey      = 1
+                RowKey            = "013"
+                Command           = "AddUsers"
+                ObjectName        = "AppScaleSet"
+                Parameter1        = "TEST"
+                Parameter2        = ""
+                RestartNecessary  = $false
+                GlobalExecuteOnce = $true
             }
         },
         [pscustomobject]@{ #Environments
@@ -409,30 +446,24 @@ function Get-StorageAccountTables {
                 KeyValue     = "True"
                 ServiceName  = ""
                 Webconfig    = $false
-            },
-            @{
-                PartitionKey = 1
-                RowKey       = 7
-                KeyName      = "ServicesCertificateThumbprint"
-                KeyValue     = ""
-                ServiceName  = ""
-                Webconfig    = $true
             }
         },
         [pscustomobject]@{ #LogTable
             TableName = $storageTableNames.LogTable
             Values    = 
             @{
-                PartitionKey        = 0
-                RowKey              = 0
-                LogPartitionKey     = 0
-                LogRowKey           = 0
-                LogCommand          = "Init Log Entry"
-                LogObjectName       = ""
-                LogComputerName     = ""
-                LogParameter1       = ""
-                LogParameter2       = ""
-                LogRestartNecessary = $false
+                PartitionKey           = 0
+                RowKey                 = 0
+                LogPartitionKey        = 0
+                LogRowKey              = 0
+                LogCommand             = "Init Log Entry"
+                LogObjectName          = ""
+                LogComputerName        = ""
+                LogParameter1          = ""
+                LogParameter2          = ""
+                LogRestartNecessary    = $false
+                LogObsoleteNewInstance = $false
+                LogGlobalExecuteOnce   = $false
             }
         },
         [pscustomobject]@{ #Infrastructure
@@ -476,7 +507,7 @@ $resourceTagsAllResources = @{"Staging" = "Sample Deployment" }
 
 $BCVersion = "14"
 $BCCumulativeUpdate = "CU02"
-$BCLanguage = "DE"
+$BCLanguage = "W1"
 
 # Credentials
 $domainAdminUser = 'vmadmin'
@@ -489,7 +520,7 @@ $vmadminPassSecure = ConvertTo-SecureString $vmadminPass -AsPlainText -Force
 
 # Main Resource infos
 $resourceLocation = 'West Europe'
-$resourceGroupSuffix = "001"
+$resourceGroupSuffix = "002"
 $resourceGroupName = "RG_ScaleSet$($resourceGroupSuffix)"
 
 # Additional Parameters
@@ -557,3 +588,24 @@ $vmSizes = @{
     WebServer                 = "Standard_DS3_v2"
     WebServerScaleSet         = "Standard_DS3_v2"
 }
+
+$certificates = (
+    @{
+        Type     = "ApplicationGateway"
+        DnsName  = "scaleset.bctest.local"
+        Path     = "" # Empty Path = generates new self-signed certificate
+        Password = $domainAdminPass
+    },
+    @{
+        Type     = "ServiceInstance"
+        DnsName  = ""
+        Path     = "" # Empty Path = generates new self-signed certificate (will use the same as before, to only generate 1 Certificate in total)
+        Password = $domainAdminPass
+    },
+    @{
+        Type     = "Webclient"
+        DnsName  = ""
+        Path     = "" # Empty Path = generates new self-signed certificate (will use the same as before, to only generate 1 Certificate in total)
+        Password = $domainAdminPass
+    }
+)

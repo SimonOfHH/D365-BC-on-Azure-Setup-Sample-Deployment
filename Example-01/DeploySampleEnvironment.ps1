@@ -2,13 +2,7 @@ $ErrorActionPreference = "Stop"
 $VerbosePreference = "SilentlyContinue" # Avoid output of "Import-Module"-commands
 Clear-Host
 
-$reconnectAccount = $false
-if ($reconnectAccount) {
-    Connect-AzAccount -Force
-    $context = Get-AzSubscription -SubscriptionName $subscriptionName
-    Set-AzContext $context | Out-Null
-}
-$modules = @("Az.Resources", "Az.Storage", "Az.KeyVault", "Az.Accounts", "Az.Compute", "Az.Network", "PSWorkflow")
+$modules = @("Az.Resources", "Az.Storage", "Az.KeyVault", "Az.Accounts", "Az.Compute", "Az.Network", "Az.ManagedServiceIdentity", "PSWorkflow")
 foreach ($module in $modules){
     if (-not (Get-Module -Name $module -ListAvailable)) {
         Write-Verbose "Installing module $module"
@@ -22,6 +16,14 @@ $ScriptDirectory = Split-Path -Path $MyInvocation.MyCommand.Definition -Parent
 . ("$ScriptDirectory\Parameters.ps1")
 . ("$ScriptDirectory\PrivateParameters.ps1")
 
+$reconnectAccount = $false
+if ($reconnectAccount) {
+    Connect-AzAccount -Force
+    $context = Get-AzSubscription -SubscriptionId $subscriptionID    
+    Set-AzContext $context | Out-Null
+    Get-AzContext
+}
+
 if (Get-Module -Name D365BCOnAzureDeployment -ListAvailable) {
     Update-Module -Name D365BCOnAzureDeployment -Force
 } else {
@@ -30,7 +32,6 @@ if (Get-Module -Name D365BCOnAzureDeployment -ListAvailable) {
 Import-Module -Name D365BCOnAzureDeployment
 
 $VerbosePreference = "Continue"
-Write-Verbose "Test"
 $testParameters = @{
     ResourceGroupName  = $ResourceGroupName
     ObjectID           = $objectID
@@ -82,6 +83,9 @@ if (-not(Get-AzKeyVault -ResourceGroupName $resourceGroupName -VaultName $nameSe
     $params = Get-KeyVaultDeploymentParams
     New-AzResourceGroupDeployment -ResourceGroupName $resourceGroupName -TemplateUri $keyVaultTemplate -TemplateParameterObject $params | Out-Null
 }
+$params = Get-KeyVaultCertificateParams
+$params = Merge-Hashtables $params $resourceArgs
+Add-CertificatesToKeyVault @params
 #endregion
 
 #region Create Image for Application Server
